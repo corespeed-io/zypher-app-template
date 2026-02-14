@@ -1,6 +1,6 @@
 {
   "tasks": {
-    "dev": "VITE_PORT=5173 deno run --allow-all main.ts"
+    "dev": "VITE_PORT=5173 deno run --env --allow-all main.ts"
   },
   "imports": {
     "@zypher/agent": "jsr:@zypher/agent@^0.9.5",
