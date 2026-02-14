@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "npm": ["pnpm"]
+  },
+  "tasks": {
+    "install-web": "cd web && pnpm install --frozen-lockfile",
+    "build-web": "cd web && pnpm build"
+  }
+}
