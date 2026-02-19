@@ -40,7 +40,9 @@ import {
 } from "@/lib/zypher-ui";
 
 const client = new TaskApiClient({
-  baseUrl: import.meta.env.VITE_API_URL ?? "http://localhost:8080/api/agent",
+  baseUrl:
+    import.meta.env.VITE_API_URL ??
+    new URL("/api/agent", window.location.origin).toString(),
 });
 
 function App() {

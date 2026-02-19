@@ -26,9 +26,6 @@
       "command": "pnpm",
       "args": ["dev"],
       "cwd": "/workspace/web",
-      "env": {
-        "VITE_API_URL": "http://localhost:8080/api/agent"
-      },
       "setup": ["pnpm install"]
     }
   }
