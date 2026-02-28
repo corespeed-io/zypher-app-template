@@ -18,4 +18,11 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  server: {
+    hmr: {
+      // Behind E2B reverse proxy: page loads via HTTPS (443),
+      // not Vite's dev port (5173)
+      clientPort: 443,
+    },
+  },
 });
