@@ -21,9 +21,13 @@ export function proxy(origin: string): MiddlewareHandler {
 
     // WebSocket upgrade
     if (c.req.header("upgrade")?.toLowerCase() === "websocket") {
-      const { socket, response } = Deno.upgradeWebSocket(c.req.raw);
+      // Forward subprotocol (e.g. "vite-hmr") so the browser accepts the connection
+      const protocol = c.req.header("sec-websocket-protocol");
+      const { socket, response } = Deno.upgradeWebSocket(c.req.raw, {
+        ...(protocol && { protocol }),
+      });
       target.protocol = base.protocol === "https:" ? "wss:" : "ws:";
-      const upstream = new WebSocket(target);
+      const upstream = new WebSocket(target, protocol ?? []);
 
       upstream.onopen = () => {
         socket.onmessage = (e) => upstream.send(e.data);
