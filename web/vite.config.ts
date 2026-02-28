@@ -20,9 +20,9 @@ export default defineConfig({
   },
   server: {
     hmr: {
-      // Behind E2B reverse proxy: page loads via HTTPS (443),
-      // not Vite's dev port (5173)
-      clientPort: 443,
+      // Behind a reverse proxy, the browser connects on 443 (HTTPS)
+      // instead of Vite's dev port
+      clientPort: Number(process.env.HMR_CLIENT_PORT) || undefined,
     },
   },
 });

@@ -26,6 +26,10 @@
       "command": "pnpm",
       "args": ["dev"],
       "cwd": "/workspace/web",
+      "env": {
+        // Vite HMR WebSocket port — set to 443 for HTTPS reverse proxy
+        "HMR_CLIENT_PORT": "443"
+      },
       "setup": ["pnpm install"]
     }
   }
