@@ -11,7 +11,10 @@ async function main(): Promise<void> {
 
   const app = new Hono()
     .route("/api", api)
-    .get("/health", (c) => c.json({ status: "ok" }));
+    .get("/health", (c) => {
+      c.header("Access-Control-Allow-Origin", "*");
+      return c.json({ status: "ok" });
+    });
 
   const vitePort = Deno.env.get("VITE_PORT");
   if (vitePort) {
