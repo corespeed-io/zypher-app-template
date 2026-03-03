@@ -18,8 +18,9 @@
     "jsr:@std/encoding@^1.0.10": "1.0.10",
     "jsr:@std/fmt@^1.0.9": "1.0.9",
     "jsr:@std/front-matter@^1.0.9": "1.0.9",
-    "jsr:@std/fs@^1.0.21": "1.0.22",
-    "jsr:@std/fs@^1.0.22": "1.0.22",
+    "jsr:@std/fs@^1.0.21": "1.0.23",
+    "jsr:@std/fs@^1.0.22": "1.0.23",
+    "jsr:@std/fs@^1.0.23": "1.0.23",
     "jsr:@std/internal@^1.0.12": "1.0.12",
     "jsr:@std/path@1": "1.1.4",
     "jsr:@std/path@^1.1.0": "1.1.4",
@@ -124,6 +125,13 @@
     },
     "@std/fs@1.0.22": {
       "integrity": "de0f277a58a867147a8a01bc1b181d0dfa80bfddba8c9cf2bacd6747bcec9308",
+      "dependencies": [
+        "jsr:@std/internal",
+        "jsr:@std/path@^1.1.4"
+      ]
+    },
+    "@std/fs@1.0.23": {
+      "integrity": "3ecbae4ce4fee03b180fa710caff36bb5adb66631c46a6460aaad49515565a37",
       "dependencies": [
         "jsr:@std/internal",
         "jsr:@std/path@^1.1.4"
@@ -1795,6 +1803,7 @@
       "jsr:@hono/hono@^4.11.9",
       "jsr:@logtape/logtape@^2.0.2",
       "jsr:@std/assert@^1.0.18",
+      "jsr:@std/fs@^1.0.23",
       "jsr:@std/path@1",
       "jsr:@zypher/agent@~0.9.5",
       "jsr:@zypher/http@0.7",

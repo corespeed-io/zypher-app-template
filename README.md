@@ -1,6 +1,9 @@
-# Zypher Agent App Template
+# Zypher Agent App Template: Diagramming Agent
 
-A full-stack template for building AI agent apps with
+![Excalidraw diagramming agent screenshot](screenshot.png)
+
+AI diagramming agent with a split-panel UI: Zypher Agent chat on the left,
+Excalidraw editor on the right. Built with
 [Zypher Agent SDK](https://docs.corespeed.io/zypher).
 
 - **Backend:** Deno + Hono with Zypher Agent (WebSocket + REST)

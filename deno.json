@@ -3,6 +3,7 @@
     "dev": "VITE_PORT=5173 deno run --allow-all main.ts"
   },
   "imports": {
+    "@std/fs": "jsr:@std/fs@^1.0.23",
     "@zypher/agent": "jsr:@zypher/agent@^0.9.5",
     "@zypher/http": "jsr:@zypher/http@^0.7.0",
     "@zypher/utils": "jsr:@zypher/utils@^0.1.0",

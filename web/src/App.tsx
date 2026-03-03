@@ -1,4 +1,5 @@
 import { Trash2Icon } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Conversation,
   ConversationContent,
@@ -27,6 +28,8 @@ import {
   ToolInput,
   ToolOutput,
 } from "@/components/ai-elements/tool.tsx";
+import type { ExcalidrawEditorHandle } from "@/components/excalidraw-editor.tsx";
+import ExcalidrawPanel from "@/components/excalidraw-panel.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
 import type { ContentBlock } from "@/lib/zypher-ui";
@@ -45,15 +48,81 @@ const client = new TaskApiClient({
     new URL("/api/agent", window.location.origin).toString(),
 });
 
+// WebSocket URL for file-change notifications
+const WS_URL = new URL("/api/events/ws", window.location.origin)
+  .toString()
+  .replace(/^http/, "ws");
+
 function App() {
+  const [currentFile, setCurrentFile] = useState<string | null>(null);
+  const [wsEvent, setWsEvent] = useState<MessageEvent | null>(null);
+  const wsRef = useRef<WebSocket | null>(null);
+  const editorRef = useRef<ExcalidrawEditorHandle>(null);
+
+  const handleClearCanvas = useCallback(() => {
+    editorRef.current?.clearCanvas();
+    setCurrentFile(null);
+  }, []);
+
+  useEffect(() => {
+    let reconnectTimer: ReturnType<typeof setTimeout>;
+    let destroyed = false;
+
+    const connect = () => {
+      const ws = new WebSocket(WS_URL);
+      wsRef.current = ws;
+      ws.onopen = () => console.log("[WS] Connected");
+      ws.onmessage = (event) => setWsEvent(event);
+      ws.onclose = () => {
+        if (destroyed) return;
+        console.log("[WS] Disconnected, reconnecting in 2s...");
+        reconnectTimer = setTimeout(connect, 2000);
+      };
+      ws.onerror = (err) => console.error("[WS] Error:", err);
+    };
+
+    connect();
+
+    return () => {
+      destroyed = true;
+      clearTimeout(reconnectTimer);
+      wsRef.current?.close();
+    };
+  }, []);
+
   return (
     <AgentProvider client={client}>
-      <ChatUI />
+      <div className="flex h-screen w-full overflow-hidden">
+        {/* Left panel: Agent chat */}
+        <div className="flex flex-col w-[420px] min-w-80 border-r">
+          <ChatUI currentFile={currentFile} onClear={handleClearCanvas} />
+        </div>
+
+        {/* Right panel: Excalidraw editor */}
+        <div className="flex-1 flex flex-col">
+          <ExcalidrawPanel
+            currentFile={currentFile}
+            setCurrentFile={setCurrentFile}
+            wsEvent={wsEvent}
+            editorRef={editorRef}
+          />
+        </div>
+      </div>
     </AgentProvider>
   );
 }
 
-function ChatUI() {
+// ---------------------------------------------------------------------------
+// Chat UI
+// ---------------------------------------------------------------------------
+
+function ChatUI({
+  currentFile,
+  onClear,
+}: {
+  currentFile: string | null;
+  onClear: () => void;
+}) {
   const {
     messages,
     streamingMessages,
@@ -69,18 +138,42 @@ function ChatUI() {
     runTask(text);
   };
 
+  const handleClear = async () => {
+    await clearMessageHistory();
+    // Also delete all .excalidraw files
+    try {
+      await fetch("/api/files", { method: "DELETE" });
+    } catch {
+      // ignore
+    }
+    onClear();
+  };
+
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col h-full">
       <header className="flex items-center justify-between border-b px-4 py-3">
-        <h1 className="font-semibold text-lg">Your First AI Agent</h1>
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          onClick={() => clearMessageHistory()}
-          disabled={isClearingMessages || isTaskRunning}
-        >
-          <Trash2Icon className="size-4" />
-        </Button>
+        <div className="flex items-center gap-2">
+          <span className="text-lg">✏️</span>
+          <h1 className="font-semibold text-lg">Diagramming Agent</h1>
+        </div>
+        <div className="flex items-center gap-2">
+          {currentFile && (
+            <span
+              className="text-xs text-muted-foreground max-w-[120px] truncate"
+              title={currentFile}
+            >
+              {currentFile}
+            </span>
+          )}
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={handleClear}
+            disabled={isClearingMessages || isTaskRunning}
+          >
+            <Trash2Icon className="size-4" />
+          </Button>
+        </div>
       </header>
 
       <Conversation>
@@ -117,9 +210,12 @@ function ChatUI() {
         <ConversationScrollButton />
       </Conversation>
 
-      <div className="border-t p-4">
+      <div className="p-4">
         <PromptInput onSubmit={handleSubmit}>
-          <PromptInputTextarea disabled={isTaskRunning} />
+          <PromptInputTextarea
+            disabled={isTaskRunning}
+            placeholder="Ask to create or edit a diagram..."
+          />
           <PromptInputFooter>
             <div />
             <PromptInputSubmit
@@ -138,10 +234,12 @@ function ChatUI() {
 // ---------------------------------------------------------------------------
 
 function MessageBlock({ message }: { message: CompleteMessage }) {
-  // Hide user messages that only contain tool results (system-generated)
+  // Hide user messages that have no visible content (e.g. pure image_url blocks)
   if (message.role === "user") {
-    const hasText = message.content.some((b) => b.type === "text");
-    if (!hasText) return null;
+    const hasVisible = message.content.some(
+      (b) => b.type === "text" || b.type === "tool_result",
+    );
+    if (!hasVisible) return null;
   }
 
   return (

@@ -5,8 +5,11 @@ import { Hono } from "hono";
 //   @zypher/agent — https://jsr.io/@zypher/agent/doc
 //   @zypher/http  — https://jsr.io/@zypher/http/doc
 //   Or run: `deno doc jsr:@zypher/agent` / `deno doc jsr:@zypher/http`
-import { cloudflareGateway, createZypherAgent } from "@zypher/agent";
-// import { getSystemPrompt } from "@zypher/agent";  // uncomment when using systemPromptLoader
+import {
+  cloudflareGateway,
+  createZypherAgent,
+  getSystemPrompt,
+} from "@zypher/agent";
 import { getRequiredEnv } from "@zypher/utils/env";
 import { createZypherHandler } from "@zypher/http";
 import { buildAgentInfo } from "@ag0/agent-info";
@@ -14,15 +17,12 @@ import { buildAgentInfo } from "@ag0/agent-info";
 // =============================================================================
 // TOOL IMPORTS
 // =============================================================================
-// Custom tools: Define your own tools in tools/ and import them here
-// import { GetWeatherTool } from "./tools/weather.ts";
-
 // Built-in tools: Zypher provides common tools for file system and terminal access
 // - createFileSystemTools(): Returns tools for read_file, list_dir, edit_file,
 //   undo_file, grep_search, file_search, copy_file, delete_file
 // - RunTerminalCmdTool: Execute shell commands
-// import { createFileSystemTools, RunTerminalCmdTool } from "@zypher/agent/tools";
-import { RunTerminalCmdTool } from "@zypher/agent/tools";
+import { createFileSystemTools, RunTerminalCmdTool } from "@zypher/agent/tools";
+import { EXCALIDRAW_INSTRUCTIONS } from "./prompt.ts";
 
 export async function createZypherAgentRouter(): Promise<Hono> {
   const agent = await createZypherAgent({
@@ -64,11 +64,11 @@ export async function createZypherAgentRouter(): Promise<Hono> {
       // Put your own instructions in customInstructions; do NOT replace
       // the entire system prompt or these capabilities will be lost.
       // Note: Returning different prompts each time will break prompt caching.
-      // systemPromptLoader: async () => {
-      //   return await getSystemPrompt(Deno.cwd(), {
-      //     customInstructions: "PUT YOUR SYSTEM PROMPT HERE",
-      //   });
-      // },
+      systemPromptLoader: async () => {
+        return await getSystemPrompt(Deno.cwd(), {
+          customInstructions: EXCALIDRAW_INSTRUCTIONS,
+        });
+      },
     },
 
     // Tools give the agent capabilities to perform actions
@@ -78,14 +78,13 @@ export async function createZypherAgentRouter(): Promise<Hono> {
       // GetWeatherTool,
 
       // Example: Built-in file system tools
-      // ...createFileSystemTools(),
+      ...createFileSystemTools(),
 
       // Built-in terminal command execution
       RunTerminalCmdTool,
     ],
 
     // MCP (Model Context Protocol) servers provide external integrations
-    // You can connect to any MCP-compatible server using "command" or "remote" type
     mcpServers: [
       // Example: Command-based MCP server (spawns a local process)
       // {
@@ -119,8 +118,8 @@ export async function createZypherAgentRouter(): Promise<Hono> {
     // Update the name and description to match your agent.
     .get("/info", async (c) => {
       const info = await buildAgentInfo(agent, {
-        name: "My Agent",
-        description: "My Agent Description",
+        name: "Diagramming Agent",
+        description: "AI agent for creating and editing Excalidraw diagrams",
       });
       return c.json(info);
     });

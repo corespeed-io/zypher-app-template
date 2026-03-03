@@ -19,6 +19,8 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { createZypherAgentRouter } from "./agent.ts";
+import fileRoutes from "./files.ts";
+import eventRoutes from "./events.ts";
 
 const app = new Hono()
   .use(cors())
@@ -29,6 +31,9 @@ const app = new Hono()
   // The dashboard shows the agent canvas tab only when GET /api/agent/info
   // returns an AgentInfo object. This endpoint is defined in agent.ts via
   // buildAgentInfo(). Without it, the dashboard treats this as a plain app.
-  .route("/agent", await createZypherAgentRouter());
+  .route("/agent", await createZypherAgentRouter())
+  // Excalidraw file & event routes
+  .route("/files", fileRoutes)
+  .route("/events", eventRoutes);
 
 export default app;
